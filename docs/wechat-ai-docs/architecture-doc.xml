@@ -1,0 +1,24 @@
+<title>微信小程序 AI 开发模式 — 组成架构</title>
+
+<p>Agent 在客户端（用户设备），LLM 推理在云端（微信服务端）。SKILL 是开发者唯一交付物，必须封装在独立分包里。</p>
+
+<callout emoji="⚠️" background-color="light-gray" border-color="gray">
+<p><b>※</b> 文档未明说、基于时序 / 架构必要性的推测；无标注项为文档直接陈述的事实。</p>
+</callout>
+
+<whiteboard type="mermaid" path="@architecture.mmd"></whiteboard>
+
+<h2>图中推论点 ※ 清单</h2>
+
+<ul>
+<li><b>Agent 运行位置</b>：文档未明说。本图按"客户端 Agent + 云端 LLM"的工作模型呈现（用户授意）。</li>
+<li><b>MCP 范围</b>：标准 MCP 跨进程；小程序里 MCP 仅在 Agent 与客户端运行时之间，不跨设备。</li>
+<li><b>HTTPS / RPC 通道</b>：上下文上行、推理 / 调用下行；具体协议未公开。</li>
+<li><b>云端三块</b>（LLM 推理 / RAG / 文件存储）：文档只说"后台"和"知识库"，本图按职责细分。</li>
+<li><b>声明类文件预载时机</b>：架构必要性推出（LLM 必须先看到 Schema 才能调用）。</li>
+<li><b>代码分包按需下载</b>：文档 Mermaid 流程的 WX2 步骤"启动运行环境，下载分包"。</li>
+</ul>
+
+<hr/>
+
+<p>本地源文件：<code>wechat-ai-docs/architecture.mmd</code>（mermaid 源码） · <code>wechat-ai-docs/architecture.html</code> / <code>architecture.png</code>（HTML + Chrome 渲染版）</p>

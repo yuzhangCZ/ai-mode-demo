@@ -1,0 +1,49 @@
+flowchart TB
+    subgraph device["用户设备（微信客户端）"]
+        direction TB
+        Agent["Agent 编排循环<br/>维护会话与上下文<br/>组织 LLM 请求 / 派发原子接口<br/>渲染卡片 / 文本回复<br/><b>本地持有 SKILL 声明 ※</b>"]
+        RT["客户端运行时<br/>3 个互相隔离的 JS 上下文"]
+        CtxA["<b>A. 原子接口</b><br/>wx.login / wx.request / 云开发 / 蓝牙<br/>超时 300s"]
+        CtxB["<b>B. 原子组件</b><br/>glass-easel · 卡片 4:1~1:1<br/>tap / load / error"]
+        CtxC["<b>C. 实时动态组件</b><br/>B + wx.request + 定时器<br/>需声明 realtime"]
+        HP["<b>独立半屏页面环境</b><br/>等同小程序，禁任何跳转 / 路由 / 广告"]
+        Agent <-->|"MCP<br/>下发调用 / 回传结果<br/>范围限于本设备内 ※"| RT
+        RT --> CtxA
+        RT --> CtxB
+        RT --> CtxC
+        RT --> HP
+    end
+
+    subgraph cloud["微信服务端（云端）※"]
+        direction TB
+        LLM["<b>LLM 推理服务</b> ※<br/>意图识别 / 规划 / 合成"]
+        RAG["<b>知识库 RAG</b> ※<br/>SKILL 不匹配时兜底"]
+        Store["<b>SKILL / 知识库文件存储</b> ※<br/>接收开发者上传 · 声明供 LLM 读取<br/>代码分包按需下发"]
+        LLM -. SKILL 不匹配时 .-> RAG
+    end
+
+    subgraph third["第三方服务（开发者后端）"]
+        Third["订单 / 支付 / 业务数据<br/>开发者自有 API"]
+    end
+
+    Agent <-->|"HTTPS / RPC ※<br/>上下文↑ 推理 / 调用↓"| LLM
+    CtxA -->|"wx.request / 云开发"| Third
+    Store -.->|"AI 会话启动时预载 ※"| Agent
+    Store -.->|"首次调用该 SKILL 时下载 ※"| CtxA
+
+    subgraph skill["SKILL —— 开发者唯一交付物<br/>前置约束：必须封装在独立分包 + app.json 启用 lazyCodeLoading"]
+        direction LR
+        Decl["<b>声明类</b><br/>app.json: agent.skills[]（≤30）<br/>AGENTS.md ≤10000B<br/>SKILL.md ≤16000B<br/>mcp.json ≤24000B（排除 outputSchema 与空白后）<br/>page-meta.json ≤8000B"]
+        Code["<b>代码类</b><br/>index.js 注册原子接口<br/>apis/ → A 上下文<br/>components/ → B / C 上下文"]
+        KB["<b>知识库文件</b><br/>PDF / DOC / DOCX / PPT / PPTX<br/>TXT / MD / XLSX"]
+    end
+
+    classDef deviceStyle fill:#f4f9ff,stroke:#1e6feb,stroke-width:2px,color:#1a1a1a
+    classDef cloudStyle fill:#faf5ff,stroke:#7b3fe4,stroke-width:2px,color:#1a1a1a
+    classDef thirdStyle fill:#fff8ec,stroke:#e67e22,stroke-width:2px,color:#1a1a1a
+    classDef skillStyle fill:#f1fbf4,stroke:#1f8a4c,stroke-width:2px,color:#1a1a1a
+
+    class Agent,RT,CtxA,CtxB,CtxC,HP deviceStyle
+    class LLM,RAG,Store cloudStyle
+    class Third thirdStyle
+    class Decl,Code,KB skillStyle

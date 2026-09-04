@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1010" font-family="PingFang SC, Hiragino Sans GB, Noto Sans SC, sans-serif">
+  <defs>
+    <linearGradient id="bgDevice" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4f9ff"/>
+      <stop offset="100%" stop-color="#eaf3ff"/>
+    </linearGradient>
+    <linearGradient id="bgCloud" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#faf5ff"/>
+      <stop offset="100%" stop-color="#f0e6ff"/>
+    </linearGradient>
+    <linearGradient id="bgThird" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff8ec"/>
+      <stop offset="100%" stop-color="#ffefcf"/>
+    </linearGradient>
+    <linearGradient id="bgSkill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f1fbf4"/>
+      <stop offset="100%" stop-color="#dcf2e3"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="1010" fill="#ffffff"/>
+
+  <text x="640" y="32" font-size="24" font-weight="700" text-anchor="middle" fill="#1a1a1a">微信小程序 AI 开发模式 — 组成架构</text>
+  <text x="640" y="54" font-size="14" text-anchor="middle" fill="#555555">Agent 在客户端（用户设备），LLM 推理在云端（微信服务端）</text>
+
+  <rect x="20" y="68" width="1240" height="24" rx="4" fill="#f5f5f7" stroke="#e0e0e6" stroke-width="1"/>
+  <text x="32" y="85" font-size="12" fill="#444444"><tspan fill="#c0392b" font-weight="700">※ </tspan>文档未明说、基于时序 / 架构必要性的推测　|　无标注项为文档直接陈述的事实</text>
+
+  <rect x="20" y="102" width="1240" height="290" rx="8" fill="url(#bgDevice)" stroke="#1e6feb" stroke-width="2"/>
+  <text x="36" y="126" font-size="16" font-weight="700" fill="#1e6feb">用户设备（微信客户端）</text>
+
+  <rect x="36" y="138" width="440" height="240" rx="6" fill="#ffffff" stroke="#1e6feb" stroke-width="1.5"/>
+  <text x="52" y="160" font-size="14" font-weight="700" fill="#1e6feb">Agent（编排循环）<tspan fill="#c0392b">*</tspan></text>
+  <text x="52" y="183" font-size="13" fill="#1a1a1a">· 维护会话与上下文</text>
+  <text x="52" y="201" font-size="13" fill="#1a1a1a">· 组织 LLM 请求</text>
+  <text x="52" y="219" font-size="13" fill="#1a1a1a">· 派发原子接口调用</text>
+  <text x="52" y="237" font-size="13" fill="#1a1a1a">· 渲染卡片 / 文本回复</text>
+  <line x1="52" y1="252" x2="460" y2="252" stroke="#c5dbf5" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="52" y="270" font-size="13" font-weight="600" fill="#1e6feb">本地持有 SKILL 声明 <tspan fill="#c0392b">*</tspan></text>
+  <text x="52" y="288" font-size="11.5" fill="#555555">mcp.json / SKILL.md / AGENTS.md / page-meta.json</text>
+  <text x="52" y="306" font-size="11.5" fill="#555555">AI 会话启动时预载 <tspan fill="#c0392b" font-weight="700">*</tspan></text>
+
+  <text x="640" y="228" font-size="14" font-weight="700" fill="#1e6feb" text-anchor="middle">MCP</text>
+  <line x1="484" y1="244" x2="800" y2="244" stroke="#1e6feb" stroke-width="2"/>
+  <polygon points="484,244 496,239 496,249" fill="#1e6feb"/>
+  <polygon points="800,244 788,239 788,249" fill="#1e6feb"/>
+  <text x="640" y="262" font-size="11" fill="#666666" text-anchor="middle">下发调用 / 回传结果</text>
+  <text x="640" y="277" font-size="11" fill="#666666" text-anchor="middle">范围限于本设备内 <tspan fill="#c0392b">*</tspan></text>
+
+  <rect x="816" y="138" width="428" height="240" rx="6" fill="#ffffff" stroke="#1e6feb" stroke-width="1.5"/>
+  <text x="832" y="160" font-size="14" font-weight="700" fill="#1e6feb">客户端运行时</text>
+  <text x="832" y="178" font-size="11.5" fill="#666666">3 个互相隔离的 JS 上下文</text>
+
+  <rect x="832" y="188" width="396" height="42" rx="4" fill="#f7fbff" stroke="#1e6feb" stroke-width="1"/>
+  <rect x="832" y="188" width="3" height="42" fill="#1e6feb"/>
+  <text x="846" y="204" font-size="12.5" font-weight="700" fill="#1e6feb">A. 原子接口</text>
+  <text x="846" y="220" font-size="11" fill="#555555">wx.login / wx.request / 云开发 / 蓝牙 · 超时 300s</text>
+
+  <rect x="832" y="234" width="396" height="42" rx="4" fill="#f7fbff" stroke="#1e6feb" stroke-width="1"/>
+  <rect x="832" y="234" width="3" height="42" fill="#1e6feb"/>
+  <text x="846" y="250" font-size="12.5" font-weight="700" fill="#1e6feb">B. 原子组件</text>
+  <text x="846" y="266" font-size="11" fill="#555555">glass-easel · 卡片 4:1~1:1 · tap / load / error</text>
+
+  <rect x="832" y="280" width="396" height="42" rx="4" fill="#f7fbff" stroke="#1e6feb" stroke-width="1"/>
+  <rect x="832" y="280" width="3" height="42" fill="#1e6feb"/>
+  <text x="846" y="296" font-size="12.5" font-weight="700" fill="#1e6feb">C. 实时动态组件</text>
+  <text x="846" y="312" font-size="11" fill="#555555">B 基础上 + wx.request + 定时器 · 需声明 realtime</text>
+
+  <rect x="832" y="326" width="396" height="42" rx="4" fill="#fff8e1" stroke="#f57c00" stroke-width="1"/>
+  <rect x="832" y="326" width="3" height="42" fill="#f57c00"/>
+  <text x="846" y="342" font-size="12.5" font-weight="700" fill="#e65100">独立的半屏页面环境</text>
+  <text x="846" y="358" font-size="11" fill="#555555">等同小程序，禁任何跳转 / 路由 / 广告</text>
+
+  <line x1="256" y1="400" x2="256" y2="458" stroke="#555555" stroke-width="2"/>
+  <polygon points="256,466 251,458 261,458" fill="#555555"/>
+  <rect x="146" y="423" width="220" height="22" rx="3" fill="#ffffff" stroke="#dddddd" stroke-width="1"/>
+  <text x="256" y="438" font-size="11.5" font-weight="600" fill="#333333" text-anchor="middle">HTTPS / RPC <tspan fill="#c0392b">*</tspan>（上下文↑ · 推理↓）</text>
+
+  <line x1="1030" y1="400" x2="1030" y2="458" stroke="#555555" stroke-width="2"/>
+  <polygon points="1030,466 1025,458 1035,458" fill="#555555"/>
+  <rect x="962" y="423" width="136" height="22" rx="3" fill="#ffffff" stroke="#dddddd" stroke-width="1"/>
+  <text x="1030" y="438" font-size="11.5" font-weight="600" fill="#333333" text-anchor="middle">wx.request / 云开发</text>
+
+  <rect x="20" y="478" width="860" height="170" rx="8" fill="url(#bgCloud)" stroke="#7b3fe4" stroke-width="2"/>
+  <text x="36" y="502" font-size="16" font-weight="700" fill="#7b3fe4">微信服务端（云端）<tspan fill="#c0392b">*</tspan></text>
+
+  <rect x="36" y="514" width="828" height="40" rx="5" fill="#ffffff" stroke="#7b3fe4" stroke-width="1.5"/>
+  <text x="52" y="532" font-size="13" font-weight="700" fill="#7b3fe4">LLM 推理服务 <tspan fill="#c0392b">*</tspan></text>
+  <text x="52" y="548" font-size="11.5" fill="#555555">意图识别 / 规划 / 合成</text>
+
+  <rect x="36" y="558" width="828" height="40" rx="5" fill="#ffffff" stroke="#7b3fe4" stroke-width="1.5"/>
+  <text x="52" y="576" font-size="13" font-weight="700" fill="#7b3fe4">知识库 RAG <tspan fill="#c0392b">*</tspan></text>
+  <text x="52" y="592" font-size="11.5" fill="#555555">SKILL 不匹配时兜底</text>
+
+  <rect x="36" y="602" width="828" height="40" rx="5" fill="#ffffff" stroke="#7b3fe4" stroke-width="1.5"/>
+  <text x="52" y="620" font-size="13" font-weight="700" fill="#7b3fe4">SKILL / 知识库文件存储 <tspan fill="#c0392b">*</tspan></text>
+  <text x="52" y="636" font-size="11.5" fill="#555555">接收开发者上传 · 声明供 LLM 读取 · 代码分包按需下发</text>
+
+  <rect x="896" y="478" width="364" height="170" rx="8" fill="url(#bgThird)" stroke="#e67e22" stroke-width="2"/>
+  <text x="912" y="502" font-size="16" font-weight="700" fill="#c66f10">第三方服务（开发者后端）</text>
+  <rect x="912" y="514" width="332" height="122" rx="5" fill="#ffffff" stroke="#e67e22" stroke-width="1.5"/>
+  <text x="928" y="540" font-size="13" fill="#444444">· 订单 / 支付 / 业务数据</text>
+  <text x="928" y="562" font-size="13" fill="#444444">· 开发者自有 API</text>
+
+  <rect x="20" y="660" width="1240" height="340" rx="8" fill="url(#bgSkill)" stroke="#1f8a4c" stroke-width="2"/>
+  <text x="36" y="684" font-size="16" font-weight="700" fill="#1f8a4c">SKILL —— 开发者唯一交付物</text>
+
+  <rect x="36" y="696" width="1208" height="28" rx="4" fill="#ffffff" stroke="#1f8a4c" stroke-width="1" stroke-dasharray="6,4"/>
+  <text x="52" y="715" font-size="12.5" fill="#444444"><tspan font-weight="700" fill="#1f8a4c">前置约束：</tspan>一个 SKILL 必须封装在一个独立分包（一个分包可放多个 SKILL） · app.json 需开启 <tspan font-family="monospace" font-size="11.5" fill="#1a1a1a">lazyCodeLoading</tspan></text>
+
+  <rect x="36" y="734" width="604" height="244" rx="6" fill="#ffffff" stroke="#1f8a4c" stroke-width="1.5"/>
+  <text x="52" y="756" font-size="14" font-weight="700" fill="#1f8a4c">声明类</text>
+  <rect x="52" y="766" width="572" height="34" rx="3" fill="#f1fbf4"/>
+  <text x="64" y="781" font-size="10.5" fill="#666666">开发者上传 → 云端存储 → AI 会话启动时预载到 Agent <tspan fill="#c0392b">*</tspan></text>
+  <text x="64" y="794" font-size="10.5" fill="#666666">（预载时机为推测；"先于代码到位"由架构必要性推出）</text>
+
+  <text x="52" y="820" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">app.json</tspan>: agent.skills[] — SKILL 列表（≤30）</text>
+  <text x="52" y="838" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">AGENTS.md</tspan> — 全局提示词（≤10000B）</text>
+  <text x="52" y="856" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">SKILL.md</tspan> — 业务说明（≤16000B）</text>
+  <text x="52" y="874" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">mcp.json</tspan> — 工具清单（≤24000B，排除 outputSchema 与空白后）</text>
+  <text x="72" y="890" font-size="11" fill="#555555">- apis[]: inputSchema / outputSchema + _meta.ui.componentPath</text>
+  <text x="72" y="905" font-size="11" fill="#555555">- components[]: path / pagePath + 可选 realtime / expirable / expiredText</text>
+  <text x="52" y="922" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">page-meta.json</tspan> — 服务直达（≤8000B）</text>
+
+  <rect x="652" y="734" width="592" height="244" rx="6" fill="#ffffff" stroke="#1f8a4c" stroke-width="1.5"/>
+  <text x="668" y="756" font-size="14" font-weight="700" fill="#1f8a4c">代码类</text>
+  <rect x="668" y="766" width="560" height="34" rx="3" fill="#f1fbf4"/>
+  <text x="680" y="781" font-size="10.5" fill="#666666">打包为独立分包 → LLM 首次调用该 SKILL 原子接口时下载 <tspan fill="#c0392b">*</tspan></text>
+  <text x="680" y="794" font-size="10.5" fill="#666666">（依据 03-operating-mechanism.md Mermaid 的 WX2 步骤）</text>
+
+  <text x="668" y="820" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">index.js</tspan> — 注册原子接口 + 中间件</text>
+  <text x="668" y="838" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">apis/</tspan> — 原子接口实现 → A 上下文</text>
+  <text x="668" y="856" font-size="12.5" fill="#1a1a1a">· <tspan font-weight="700" fill="#1f8a4c">components/</tspan> — 原子组件实现 → B / C 上下文</text>
+
+  <line x1="668" y1="872" x2="1228" y2="872" stroke="#a3d9b3" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="668" y="892" font-size="11.5" fill="#666666">三处文件分别落地到客户端运行时的上下文：</text>
+  <text x="668" y="910" font-size="12" fill="#1f8a4c">A 上下文 ← apis/</text>
+  <text x="668" y="928" font-size="12" fill="#1f8a4c">B / C 上下文 ← components/</text>
+
+  <rect x="36" y="986" width="1208" height="28" rx="4" fill="#ffffff" stroke="#1f8a4c" stroke-width="1.5"/>
+  <text x="52" y="1005" font-size="12.5" fill="#444444"><tspan font-weight="700" fill="#1f8a4c">知识库文件</tspan>（PDF / DOC / DOCX / PPT / PPTX / TXT / MD / XLSX） → 上传公众平台</text>
+</svg>

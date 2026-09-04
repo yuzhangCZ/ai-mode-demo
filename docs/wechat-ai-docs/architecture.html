@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>微信小程序 AI 开发模式 — 组成架构</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", -apple-system, sans-serif;
+    margin: 0;
+    padding: 36px;
+    background: #ffffff;
+    color: #1a1a1a;
+  }
+  .wrap { width: 1480px; margin: 0 auto; }
+
+  .title { font-size: 26px; font-weight: 700; text-align: center; margin: 0 0 6px; }
+  .subtitle { font-size: 15px; color: #555; text-align: center; margin: 0 0 14px; }
+  .legend {
+    font-size: 13px; color: #444;
+    background: #f5f5f7; border: 1px solid #e0e0e6;
+    padding: 8px 14px; border-radius: 4px;
+    margin: 0 0 22px;
+  }
+  .legend .mark { color: #c0392b; font-weight: 700; }
+
+  .box {
+    border-radius: 8px;
+    padding: 16px 18px;
+    position: relative;
+  }
+  .box > .head {
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .box > .head .star { color: #c0392b; font-weight: 700; font-size: 14px; }
+
+  /* 用户设备 */
+  .device {
+    border: 2px solid #1e6feb;
+    background: #f4f9ff;
+  }
+  .device-row { display: flex; gap: 0; align-items: stretch; }
+  .agent {
+    flex: 1.05;
+    background: #ffffff;
+    border: 1.5px solid #1e6feb;
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .runtime {
+    flex: 1;
+    background: #ffffff;
+    border: 1.5px solid #1e6feb;
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .subhead {
+    font-size: 14px; font-weight: 700;
+    color: #1e6feb;
+    margin-bottom: 8px;
+  }
+  .agent .subhead .star, .runtime .subhead .star { color: #c0392b; }
+
+  ul { margin: 0; padding-left: 18px; }
+  li { font-size: 12.5px; line-height: 1.7; margin-bottom: 2px; }
+  li .star { color: #c0392b; font-weight: 700; }
+
+  .arrow-col {
+    width: 130px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 4px;
+  }
+  .arrow-col .label {
+    font-size: 13px; font-weight: 700; color: #1e6feb;
+    text-align: center; line-height: 1.4;
+  }
+  .arrow-col .label .star { color: #c0392b; }
+  .arrow-col .label .small { font-size: 10.5px; color: #666; font-weight: 500; display:block; margin-top:4px; }
+  .arrow-line {
+    width: 100%; height: 2px; background: #1e6feb;
+    position: relative; margin: 10px 0;
+  }
+  .arrow-line::before, .arrow-line::after {
+    content: ""; position: absolute; top: 50%;
+    width: 0; height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    transform: translateY(-50%);
+  }
+  .arrow-line::before { left: 0; border-right: 8px solid #1e6feb; }
+  .arrow-line::after { right: 0; border-left: 8px solid #1e6feb; }
+
+  .ctx-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .ctx {
+    background: #f7fbff;
+    border-left: 3px solid #1e6feb;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 0 4px 4px 0;
+  }
+  .ctx b { color: #1e6feb; }
+  .ctx .desc { color: #555; font-size: 11.5px; }
+  .halfpage {
+    background: #fff8e1;
+    border-left: 3px solid #f57c00;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 0 4px 4px 0;
+    margin-top: 6px;
+  }
+  .halfpage b { color: #e65100; }
+
+  .down-arrows {
+    display: flex; gap: 0; height: 70px;
+    padding: 0 8px;
+  }
+  .down-arrow {
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+    padding-top: 8px;
+  }
+  .down-arrow .line {
+    width: 2px; height: 40px; background: #555;
+    position: relative;
+  }
+  .down-arrow .line::after {
+    content: ""; position: absolute; bottom: -1px; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #555;
+  }
+  .down-arrow .lbl {
+    font-size: 11.5px; font-weight: 600; color: #333;
+    background: #fff; padding: 2px 8px;
+    position: absolute; top: 20px; white-space: nowrap;
+    border: 1px solid #ddd; border-radius: 3px;
+  }
+  .down-arrow .lbl .star { color: #c0392b; }
+
+  .cloud-row { display: flex; gap: 16px; }
+  .cloud {
+    flex: 1.3;
+    border: 2px solid #7b3fe4;
+    background: #faf5ff;
+  }
+  .cloud .head { color: #7b3fe4; }
+  .cloud-block {
+    background: #ffffff;
+    border: 1.5px solid #7b3fe4;
+    border-radius: 5px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+  .cloud-block:last-child { margin-bottom: 0; }
+  .cloud-block .name { font-size: 13px; font-weight: 700; color: #7b3fe4; }
+  .cloud-block .name .star { color: #c0392b; }
+  .cloud-block .desc { font-size: 11.5px; color: #555; margin-top: 2px; }
+
+  .third {
+    flex: 1;
+    border: 2px solid #e67e22;
+    background: #fff8ec;
+  }
+  .third .head { color: #c66f10; }
+  .third-list {
+    background: #ffffff;
+    border: 1.5px solid #e67e22;
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #444;
+    line-height: 1.7;
+  }
+
+  .skill {
+    margin-top: 26px;
+    border: 2px solid #1f8a4c;
+    background: #f1fbf4;
+  }
+  .skill .head { color: #1f8a4c; }
+  .constraint {
+    background: #fff;
+    border: 1px dashed #1f8a4c;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #444;
+    margin-bottom: 12px;
+  }
+  .constraint b { color: #1f8a4c; }
+  .skill-cols { display: flex; gap: 16px; }
+  .skill-col {
+    flex: 1;
+    background: #fff;
+    border: 1.5px solid #1f8a4c;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .skill-col h4 {
+    margin: 0 0 6px; font-size: 14px; color: #1f8a4c;
+  }
+  .skill-col .path {
+    font-size: 11px; color: #666;
+    background: #f1fbf4;
+    padding: 6px 8px; border-radius: 3px;
+    margin-bottom: 8px;
+    line-height: 1.55;
+  }
+  .skill-col .path .star { color: #c0392b; font-weight: 700; }
+  .skill-col ul { padding-left: 16px; }
+  .skill-col li { font-size: 12px; line-height: 1.65; }
+  .skill-col li b { color: #1f8a4c; }
+  .skill-col li ul { padding-left: 14px; margin-top: 2px; }
+  .skill-col li ul li { font-size: 11.5px; list-style: '- '; }
+
+  .kb {
+    margin-top: 12px;
+    background: #fff;
+    border: 1.5px solid #1f8a4c;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+  }
+  .kb b { color: #1f8a4c; }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1 class="title">微信小程序 AI 开发模式 — 组成架构</h1>
+  <div class="subtitle">Agent 在客户端（用户设备），LLM 推理在云端（微信服务端）</div>
+  <div class="legend">
+    <span class="mark">※</span> 文档未明说、基于时序/架构必要性的推测 　|　 无标注项为文档直接陈述的事实
+  </div>
+
+  <div class="box device">
+    <div class="head">用户设备（微信客户端）</div>
+    <div class="device-row">
+      <div class="agent">
+        <div class="subhead">Agent（编排循环）<span class="star">※</span></div>
+        <ul>
+          <li>维护会话与上下文</li>
+          <li>组织 LLM 请求</li>
+          <li>派发原子接口调用</li>
+          <li>渲染卡片 / 文本回复</li>
+        </ul>
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #c5dbf5;">
+          <div style="font-size:12px; color:#1e6feb; font-weight:600; margin-bottom:4px;">
+            本地持有 SKILL 声明 <span style="color:#c0392b;">※</span>
+          </div>
+          <div style="font-size:11.5px; color:#555; line-height:1.6;">
+            mcp.json / SKILL.md / AGENTS.md / page-meta.json<br>
+            AI 会话启动时预载 <span style="color:#c0392b; font-weight:700;">※</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow-col">
+        <div class="label">MCP</div>
+        <div class="arrow-line"></div>
+        <div class="label"><span class="small">下发调用 / 回传结果<br>范围限于本设备内 <span class="star">※</span></span></div>
+      </div>
+
+      <div class="runtime">
+        <div class="subhead">客户端运行时</div>
+        <div style="font-size:11.5px; color:#666; margin-bottom:6px;">3 个互相隔离的 JS 上下文</div>
+        <div class="ctx-list">
+          <div class="ctx">
+            <b>A. 原子接口</b><br>
+            <span class="desc">wx.login / wx.request / 云开发 / 蓝牙 · 超时 300s</span>
+          </div>
+          <div class="ctx">
+            <b>B. 原子组件</b><br>
+            <span class="desc">glass-easel · 卡片 4:1~1:1 · tap/load/error</span>
+          </div>
+          <div class="ctx">
+            <b>C. 实时动态组件</b><br>
+            <span class="desc">B 基础上 + wx.request + 定时器 · 需声明 realtime</span>
+          </div>
+        </div>
+        <div class="halfpage">
+          <b>独立的半屏页面环境</b><br>
+          <span style="color:#555; font-size:11.5px;">等同小程序，禁任何跳转/路由/广告</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="down-arrows">
+    <div class="down-arrow" style="flex: 1.3;">
+      <div class="line"></div>
+      <div class="lbl">HTTPS / RPC <span class="star">※</span>（上下文 ↑ · 推理/调用 ↓）</div>
+    </div>
+    <div style="flex:0.2;"></div>
+    <div class="down-arrow" style="flex: 1;">
+      <div class="line"></div>
+      <div class="lbl">wx.request / 云开发</div>
+    </div>
+  </div>
+
+  <div class="cloud-row">
+    <div class="box cloud">
+      <div class="head">微信服务端（云端）<span class="star">※</span></div>
+      <div class="cloud-block">
+        <div class="name">LLM 推理服务 <span class="star">※</span></div>
+        <div class="desc">意图识别 / 规划 / 合成</div>
+      </div>
+      <div class="cloud-block">
+        <div class="name">知识库 RAG <span class="star">※</span></div>
+        <div class="desc">SKILL 不匹配时兜底</div>
+      </div>
+      <div class="cloud-block">
+        <div class="name">SKILL / 知识库文件存储 <span class="star">※</span></div>
+        <div class="desc">接收开发者上传 · 声明供 LLM 读取 · 代码分包按需下发</div>
+      </div>
+    </div>
+
+    <div class="box third">
+      <div class="head">第三方服务（开发者后端）</div>
+      <div class="third-list">
+        · 订单 / 支付 / 业务数据<br>
+        · 开发者自有 API
+      </div>
+    </div>
+  </div>
+
+  <div class="box skill">
+    <div class="head">SKILL —— 开发者唯一交付物</div>
+
+    <div class="constraint">
+      <b>前置约束：</b>一个 SKILL 必须封装在一个独立分包（一个分包可放多个 SKILL） · app.json 需开启 <code>lazyCodeLoading</code>
+    </div>
+
+    <div class="skill-cols">
+      <div class="skill-col">
+        <h4>声明类</h4>
+        <div class="path">
+          开发者上传 → 云端存储 → AI 会话启动时预载到 Agent <span class="star">※</span><br>
+          （预载时机为推测；"先于代码到位"由架构必要性推出）
+        </div>
+        <ul>
+          <li><b>app.json</b>: agent.skills[] — SKILL 列表（≤30）</li>
+          <li><b>AGENTS.md</b> — 全局提示词（≤10000B）</li>
+          <li><b>SKILL.md</b> — 业务说明（≤16000B）</li>
+          <li><b>mcp.json</b> — 工具清单（≤24000B，排除 outputSchema 与空白字符后计算）
+            <ul>
+              <li>apis[]: inputSchema / outputSchema + _meta.ui.componentPath</li>
+              <li>components[]: path / pagePath + 可选 realtime / expirable / expiredText</li>
+            </ul>
+          </li>
+          <li><b>page-meta.json</b> — 服务直达（≤8000B）</li>
+        </ul>
+      </div>
+
+      <div class="skill-col">
+        <h4>代码类</h4>
+        <div class="path">
+          打包为独立分包 → LLM 首次调用该 SKILL 原子接口时下载 <span class="star">※</span><br>
+          （依据 03-operating-mechanism.md Mermaid 的 WX2 步骤）
+        </div>
+        <ul>
+          <li><b>index.js</b> — 注册原子接口 + 中间件</li>
+          <li><b>apis/</b> — 原子接口实现 → A 上下文</li>
+          <li><b>components/</b> — 原子组件实现 → B / C 上下文</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="kb">
+      <b>知识库文件</b>（PDF / DOC / DOCX / PPT / PPTX / TXT / MD / XLSX） → 上传公众平台
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
