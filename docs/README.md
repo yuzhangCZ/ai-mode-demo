@@ -33,6 +33,7 @@
 |---|---|
 | [wechat-ai-docs/](./wechat-ai-docs/) | 小程序 AI 开发模式官方文档站本地镜像（11 篇，2026-07-21 抓取），含接入指南、运行机制、API/组件支持列表、FAQ、changelog |
 | [wechat-ai-capabilities.md](./analysis/wechat-ai-capabilities.md) | 基于官方镜像整理的开发者视角能力清单（6 组 24 项：是什么/解决什么/如何接入/约束/出处），含能力全景图与版本场景值速查 |
+| [api/wechat-ai-interfaces.md](./api/wechat-ai-interfaces.md) | 接口文档（Coding Agent 参考知识）：集中 TypeScript 类型定义（AtomicApiHandler/ModelContext/ViewContext/FollowUpMessage 等）+ wx.modelContext 全量 API 签名 + 原子接口契约 + 声明式配置；以基础库 3.16.1/3.17.2 源码解包实证为准，含源码↔官方文档 11 项差异对照（如 openDetailPage 实际参数为 {url}、半屏页上行消息须 getContext() 链式调用、expireAllCards filter 三字段、api/call 上行项、中间件短路语义等未公开细节） |
 
 ## 关键交叉印证点
 
