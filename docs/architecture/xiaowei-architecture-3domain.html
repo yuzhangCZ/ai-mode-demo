@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小微 AI 三域总体架构 · 客户端 | 统一网关 | Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header { margin-bottom: 1rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .panel-title { font-size: 1.05rem; font-weight: 600; margin: 2rem 0 0.75rem 0; color: #e2e8f0; }
+    .panel-title .panel-tag { color: #64748b; font-size: 0.75rem; font-weight: 400; }
+    .diagram-container { background: rgba(15, 23, 42, 0.5); border-radius: 1rem; border: 1px solid #1e293b; padding: 1.25rem; overflow-x: auto; }
+    svg { width: 100%; min-width: 1100px; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card-dot.violet { background: #a78bfa; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+    .toolbar { display: flex; gap: 0.5rem; margin-left: auto; flex-shrink: 0; align-items: center; }
+    .toolbar-toggle { background: transparent; border: none; color: #475569; cursor: pointer; font-size: 1.25rem; line-height: 1; padding: 0.25rem 0.5rem; border-radius: 0.375rem; transition: color 0.2s, background 0.2s; }
+    .toolbar-toggle:hover { color: #94a3b8; background: rgba(30, 41, 59, 0.5); }
+    .toolbar-actions { display: none; gap: 0.5rem; }
+    .toolbar.expanded .toolbar-actions { display: flex; }
+    .toolbar-actions button { background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #94a3b8; padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-family: inherit; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .toolbar-actions button:hover { background: rgba(51, 65, 85, 0.8); color: white; border-color: #475569; }
+    @media print { body { background: #020617; padding: 1rem; } .toolbar { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container" id="report-container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>小微 AI 三域总体架构 · 客户端 | 统一网关 | Agent</h1>
+        <div class="toolbar">
+          <div class="toolbar-actions">
+            <button onclick="copyAsImage(this)">📋 Copy</button>
+            <button onclick="downloadPNG(this)">🖼️ PNG</button>
+            <button onclick="downloadPDF(this)">📄 PDF</button>
+          </div>
+          <button class="toolbar-toggle" onclick="this.parentElement.classList.toggle('expanded')" title="Export options" aria-label="Export options">⋯</button>
+        </div>
+      </div>
+      <p class="subtitle">一套协议 · 两个平面 · 三个域：客户端 ⇄ NDJSON 单端点 ⇄ 网关（接入协议面 + MCP 工具面）⇄ Agent（决策 · 会话 · 上下文）· 能力提供方经工具面挂接</p>
+    </div>
+
+    <h2 class="panel-title">总体架构 <span class="panel-tag">网关对接客户端与 Agent · 客户端仅对接一套协议（NDJSON 单端点 · 三类流复用）</span></h2>
+    <div class="diagram-container">
+      <svg viewBox="0 0 1560 980">
+        <defs>
+          <marker id="g-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+          <marker id="g-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/></marker>
+          <marker id="g-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fb923c"/></marker>
+          <marker id="g-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/></marker>
+          <marker id="g-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/></marker>
+          <marker id="g-slate-r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse"><polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/></marker>
+          <marker id="g-cyan-r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse"><polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/></marker>
+          <marker id="g-orange-r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto-start-reverse"><polygon points="0 0, 10 3.5, 0 7" fill="#fb923c"/></marker>
+          <pattern id="gd-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#gd-grid)"/>
+
+        <!-- ════════ 域容器 ════════ -->
+        <rect x="40" y="30" width="390" height="670" rx="12" fill="rgba(251, 191, 36, 0.03)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="52" y="50" fill="#fbbf24" font-size="10" font-weight="600">客户端域 · 微信端侧（零决策执行宿主）</text>
+
+        <rect x="560" y="30" width="470" height="480" rx="12" fill="rgba(34, 211, 238, 0.02)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="572" y="50" fill="#22d3ee" font-size="10" font-weight="600">统一网关域 · 对接客户端与 Agent（接入协议面 + MCP 工具面 · 无会话状态）</text>
+
+        <rect x="1120" y="30" width="400" height="490" rx="12" fill="rgba(167, 139, 250, 0.02)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="1132" y="50" fill="#a78bfa" font-size="10" font-weight="600">Agent 域 · 决策 + 会话与上下文</text>
+
+        <!-- ════════ 客户端域 ════════ -->
+        <rect x="60" y="60" width="350" height="52" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="235" y="82" fill="white" font-size="10" font-weight="600" text-anchor="middle">对话交互面（共享）</text>
+        <text x="235" y="100" fill="#94a3b8" font-size="6.5" text-anchor="middle">小微对话 · 双入口：系统级小微 ‖ 独立 Agent</text>
+
+        <!-- 伞容器：端侧执行层（点线=分组容器） -->
+        <rect x="54" y="118" width="362" height="320" rx="8" fill="rgba(148, 163, 184, 0.02)" stroke="#475569" stroke-width="1" stroke-dasharray="2,4"/>
+        <text x="404" y="131" fill="#64748b" font-size="8" font-weight="600" text-anchor="end">端侧执行层 · 双链分叉落点</text>
+
+        <rect x="62" y="140" width="170" height="270" rx="8" fill="rgba(34, 211, 238, 0.03)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="72" y="154" fill="#22d3ee" font-size="8" font-weight="600">A 链 · 客户端运行时</text>
+
+        <rect x="70" y="162" width="154" height="32" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="147" y="175" fill="white" font-size="8" font-weight="600" text-anchor="middle">运行时管理器</text>
+        <text x="147" y="187" fill="#94a3b8" font-size="6" text-anchor="middle">分包下载 · session · 生命周期</text>
+
+        <rect x="70" y="200" width="154" height="36" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="147" y="213" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">原子接口上下文</text>
+        <text x="147" y="227" fill="#94a3b8" font-size="6" text-anchor="middle">数据生产 · tools/call</text>
+
+        <rect x="70" y="242" width="154" height="36" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="147" y="255" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">原子组件上下文</text>
+        <text x="147" y="269" fill="#94a3b8" font-size="6" text-anchor="middle">高敏确认 · 需手势</text>
+
+        <rect x="70" y="284" width="154" height="36" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="147" y="297" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">实时动态组件</text>
+        <text x="147" y="311" fill="#94a3b8" font-size="6" text-anchor="middle">联网 · 定时器 · 实时刷新</text>
+
+        <rect x="70" y="326" width="154" height="44" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="147" y="340" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">glass-easel · 基础库桥接</text>
+        <text x="147" y="354" fill="#94a3b8" font-size="6" text-anchor="middle">卡片渲染 · wx.modelContext</text>
+        <text x="147" y="366" fill="#94a3b8" font-size="6" text-anchor="middle">onAgentHandoff（受限 API）</text>
+
+        <text x="147" y="394" fill="#64748b" font-size="6" text-anchor="middle">三上下文互隔离 · 权限分级</text>
+
+        <rect x="240" y="140" width="168" height="270" rx="8" fill="rgba(148, 163, 184, 0.02)" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="250" y="154" fill="#94a3b8" font-size="8" font-weight="600">B 链 · 薄执行器</text>
+
+        <rect x="248" y="162" width="152" height="104" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="324" y="176" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">薄执行器（零智能）</text>
+        <text x="324" y="194" fill="#94a3b8" font-size="6" text-anchor="middle">元素树节点级动作</text>
+        <text x="324" y="208" fill="#94a3b8" font-size="6" text-anchor="middle">手势渲染（可见操作）</text>
+        <text x="324" y="222" fill="#94a3b8" font-size="6" text-anchor="middle">断网全灭</text>
+
+        <rect x="248" y="278" width="152" height="92" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="324" y="292" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">云脑端手</text>
+        <text x="324" y="308" fill="#94a3b8" font-size="6" text-anchor="middle">大脑在云端 · 端侧无智能</text>
+        <text x="324" y="322" fill="#94a3b8" font-size="6" text-anchor="middle">无视觉通道 · canvas 全盲</text>
+        <text x="324" y="336" fill="#94a3b8" font-size="6" text-anchor="middle">指令经单协议通道下行</text>
+        <text x="324" y="350" fill="#94a3b8" font-size="6" text-anchor="middle">操作对象＝小程序运行时</text>
+
+        <text x="324" y="394" fill="#64748b" font-size="6" text-anchor="middle">与 A 链共享网关 · Agent · 通道</text>
+
+        <text x="235" y="428" fill="#64748b" font-size="6.5" text-anchor="middle">A/B 链并列 · 指令在端侧分叉落地</text>
+
+        <rect x="60" y="460" width="350" height="58" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="235" y="480" fill="white" font-size="10" font-weight="600" text-anchor="middle">小程序运行时（共享）</text>
+        <text x="235" y="498" fill="#94a3b8" font-size="6.5" text-anchor="middle">逻辑 / 渲染 / 半屏 · A 接力载体 ‖ B 被操作环境</text>
+
+        <rect x="60" y="532" width="350" height="22" rx="5" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="235" y="547" fill="#a78bfa" font-size="7" text-anchor="middle">共享 storage（状态线）· 跨轮 / 跨接力续接</text>
+        <line x1="150" y1="518" x2="150" y2="530" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3,3"/>
+
+        <rect x="60" y="564" width="350" height="70" rx="6" fill="rgba(30, 41, 59, 0.35)" stroke="#94a3b8" stroke-width="1.2"/>
+        <text x="235" y="584" fill="white" font-size="10" font-weight="600" text-anchor="middle">宿主底座（微信客户端本体）</text>
+        <text x="235" y="600" fill="#94a3b8" font-size="6.5" text-anchor="middle">wx API 实现 · 跨上下文消息集散 · 进程回收</text>
+
+        <text x="235" y="640" fill="#64748b" font-size="6.5" text-anchor="middle">零决策：断网全灭 · 接力单向不可回话</text>
+        <text x="235" y="654" fill="#64748b" font-size="6.5" text-anchor="middle">会话记录本地 · 换设备不跟随</text>
+
+        <!-- ════════ 网关域 · 接入/协议面 ════════ -->
+        <rect x="575" y="60" width="440" height="110" rx="8" fill="rgba(8, 51, 68, 0.12)" stroke="#22d3ee" stroke-width="1.2"/>
+        <text x="585" y="76" fill="#22d3ee" font-size="8" font-weight="600">接入 / 协议面（终接客户端 NDJSON）</text>
+
+        <rect x="590" y="84" width="410" height="50" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="795" y="102" fill="white" font-size="10" font-weight="600" text-anchor="middle">协议转换 · 流式透传</text>
+        <text x="795" y="120" fill="#94a3b8" font-size="6.5" text-anchor="middle">客户端 NDJSON ⇄ Agent 报文（apiCalls）</text>
+
+        <!-- ════════ 网关域 · 工具面（MCP） ════════ -->
+        <rect x="575" y="190" width="440" height="130" rx="8" fill="rgba(120, 53, 15, 0.06)" stroke="#fb923c" stroke-width="1.2"/>
+        <text x="585" y="206" fill="#fb923c" font-size="8" font-weight="600">工具面 · MCP（能力接入面）</text>
+
+        <rect x="590" y="214" width="410" height="44" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="795" y="232" fill="white" font-size="10" font-weight="600" text-anchor="middle">注册表 · read_skill 渐进披露</text>
+        <text x="795" y="248" fill="#94a3b8" font-size="6.5" text-anchor="middle">SKILL 存储库 · 按需加载 reference</text>
+
+        <rect x="590" y="264" width="410" height="44" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="795" y="282" fill="white" font-size="10" font-weight="600" text-anchor="middle">调用适配 · 结果归一</text>
+        <text x="795" y="298" fill="#94a3b8" font-size="6.5" text-anchor="middle">tools/call 分发 · 卡片负载归一</text>
+
+        <!-- ════════ 网关域 · 能力提供方 ════════ -->
+        <rect x="575" y="335" width="440" height="163" rx="8" fill="rgba(148, 163, 184, 0.03)" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="585" y="351" fill="#94a3b8" font-size="8" font-weight="600">能力提供方（经 MCP 接入）</text>
+
+        <rect x="590" y="360" width="410" height="70" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="795" y="380" fill="white" font-size="10" font-weight="600" text-anchor="middle">胖技能 / 子代理（云端脑）</text>
+        <text x="795" y="398" fill="#94a3b8" font-size="6.5" text-anchor="middle">mini-app GUI · wx-action · 小游戏 · memory-manager …</text>
+        <text x="795" y="412" fill="#94a3b8" font-size="6.5" text-anchor="middle">自主多步执行 · 主模型只见结论</text>
+
+        <rect x="590" y="438" width="410" height="44" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="795" y="456" fill="white" font-size="10" font-weight="600" text-anchor="middle">第三方 SKILL（开发者能力）</text>
+        <text x="795" y="472" fill="#94a3b8" font-size="6.5" text-anchor="middle">SKILL.md · mcp.json · 接力页 · 提审入库</text>
+
+        <text x="795" y="492" fill="#64748b" font-size="6.5" text-anchor="middle">工具面 ⇄ 提供方 = MCP 接入层 · 对客户端不可见</text>
+
+        <!-- ════════ Agent 域 ════════ -->
+        <rect x="1135" y="60" width="370" height="56" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="1320" y="80" fill="white" font-size="10" font-weight="600" text-anchor="middle">编排路由</text>
+        <text x="1320" y="96" fill="#94a3b8" font-size="6.5" text-anchor="middle">模型侧 FC 粗路由 + 质量分策略</text>
+
+        <rect x="1135" y="124" width="370" height="286" rx="8" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="1320" y="142" fill="white" font-size="10" font-weight="600" text-anchor="middle">Agent 模块（决策循环）</text>
+        <text x="1320" y="158" fill="#fb923c" font-size="7" text-anchor="middle">WeLM 主控 + DeepSeek 工具式子模型 · 人格统一</text>
+
+        <rect x="1147" y="168" width="356" height="56" rx="6" fill="rgba(15, 23, 42, 0.5)" stroke="#fb923c" stroke-width="1.2"/>
+        <text x="1325" y="184" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">基础工具层（内置 · schema×4 常驻 · 直连秒回）</text>
+        <text x="1325" y="198" fill="#94a3b8" font-size="6.5" text-anchor="middle">read_skill＝注册表唯一通道 · get_memory＝读长期记忆</text>
+        <text x="1325" y="210" fill="#94a3b8" font-size="6.5" text-anchor="middle">general_search＝联网搜索 · get_position＝定位</text>
+
+        <rect x="1147" y="232" width="356" height="56" rx="6" fill="rgba(15, 23, 42, 0.5)" stroke="#fb923c" stroke-width="1.2"/>
+        <text x="1325" y="248" fill="white" font-size="7.5" font-weight="600" text-anchor="middle">技能清单 _skills_index.md（26+ 技能 · 常驻）</text>
+        <text x="1325" y="262" fill="#94a3b8" font-size="6.5" text-anchor="middle">分类 · 概述 · 召回关键词 · 加载参数</text>
+        <text x="1325" y="274" fill="#94a3b8" font-size="6.5" text-anchor="middle">read_skill → reference → 调用 → 子代理（只见结论）</text>
+
+        <rect x="1147" y="296" width="356" height="84" rx="6" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1.2"/>
+        <text x="1325" y="312" fill="#22d3ee" font-size="7.5" font-weight="600" text-anchor="middle">会话与上下文（Agent 持有）</text>
+        <rect x="1155" y="322" width="168" height="48" rx="5" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="1239" y="338" fill="white" font-size="8" font-weight="600" text-anchor="middle">会话管理</text>
+        <text x="1239" y="352" fill="#94a3b8" font-size="6.5" text-anchor="middle">session 生命周期（30min）</text>
+        <text x="1239" y="364" fill="#94a3b8" font-size="6.5" text-anchor="middle">多轮历史存储 / 检索</text>
+        <rect x="1327" y="322" width="168" height="48" rx="5" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="1411" y="338" fill="white" font-size="8" font-weight="600" text-anchor="middle">上下文装配</text>
+        <text x="1411" y="352" fill="#94a3b8" font-size="6.5" text-anchor="middle">历史 + 工具 schema + 清单</text>
+        <text x="1411" y="364" fill="#94a3b8" font-size="6.5" text-anchor="middle">+ 多模态 → 开箱即用</text>
+
+        <text x="1320" y="398" fill="#94a3b8" font-size="7" text-anchor="middle">外部能力经工具面（MCP）· 轻量工具内置</text>
+
+        <rect x="1135" y="414" width="370" height="60" rx="6" fill="rgba(8, 51, 68, 0.3)" stroke="#22d3ee" stroke-width="1.2"/>
+        <text x="1320" y="432" fill="white" font-size="9" font-weight="600" text-anchor="middle">决策循环（每轮）</text>
+        <text x="1320" y="450" fill="#94a3b8" font-size="6.5" text-anchor="middle">装配 → LLM 决策 → 内置工具 / tools/call（经工具面）</text>
+        <text x="1320" y="464" fill="#94a3b8" font-size="6.5" text-anchor="middle">→ 结果归一 → 循环直至最终回复</text>
+
+        <text x="1320" y="500" fill="#64748b" font-size="6.5" text-anchor="middle">执行面落端侧：A 链运行时（tools/call）· B 链执行器（指令）</text>
+
+        <!-- ════════ 客户端 ⇄ 网关：一套协议 ════════ -->
+        <rect x="465" y="90" width="60" height="250" rx="30" fill="rgba(8, 51, 68, 0.5)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="495" y="230" fill="#22d3ee" font-size="7.5" font-weight="700" text-anchor="middle">一套协议</text>
+        <text x="495" y="245" fill="#22d3ee" font-size="7" font-weight="600" text-anchor="middle">NDJSON</text>
+        <text x="495" y="258" fill="#94a3b8" font-size="6.5" text-anchor="middle">单端点</text>
+        <text x="495" y="271" fill="#94a3b8" font-size="6.5" text-anchor="middle">三类流复用</text>
+
+        <line x1="430" y1="118" x2="556" y2="118" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#g-cyan)"/>
+        <text x="495" y="111" fill="#22d3ee" font-size="6.5" text-anchor="middle">query · tools/result（上行）</text>
+        <line x1="560" y1="152" x2="434" y2="152" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#g-cyan)"/>
+        <text x="495" y="165" fill="#22d3ee" font-size="6.5" text-anchor="middle">回复 · tools/call / B 链指令 · 卡片（下行）</text>
+
+        <text x="495" y="386" fill="#94a3b8" font-size="6.5" text-anchor="middle">会话与工具调用复用同一通道</text>
+
+        <!-- ════════ 网关 ⇄ Agent：两条通道 ════════ -->
+        <line x1="1015" y1="132" x2="1116" y2="132" stroke="#22d3ee" stroke-width="1.5" marker-start="url(#g-cyan-r)" marker-end="url(#g-cyan)"/>
+        <text x="1066" y="121" fill="#22d3ee" font-size="7" font-weight="600" text-anchor="middle">问答通道</text>
+        <text x="1066" y="145" fill="#94a3b8" font-size="6.5" text-anchor="middle">对话 · 回复流透传</text>
+
+        <line x1="1015" y1="255" x2="1116" y2="255" stroke="#fb923c" stroke-width="1.5" marker-start="url(#g-orange-r)" marker-end="url(#g-orange)"/>
+        <text x="1066" y="244" fill="#fb923c" font-size="7" font-weight="600" text-anchor="middle">工具通道</text>
+        <text x="1066" y="268" fill="#94a3b8" font-size="6.5" text-anchor="middle">工具注册 · tools/call ⇄ 结果</text>
+
+        <!-- 工具面 → 提供方 -->
+        <line x1="795" y1="320" x2="795" y2="356" stroke="#64748b" stroke-width="1.2" marker-end="url(#g-slate)"/>
+        <text x="803" y="342" fill="#64748b" font-size="6.5">派发子代理</text>
+
+        <!-- ════════ 客户端内部流 ════════ -->
+        <line x1="200" y1="112" x2="200" y2="136" stroke="#64748b" stroke-width="1" marker-end="url(#g-slate)"/>
+        <text x="208" y="120" fill="#64748b" font-size="6">tools/call 注入</text>
+        <path d="M 60 86 L 30 86 L 30 489 L 41 489 A 6 6 0 0 1 53 489 L 58 489" fill="none" stroke="#fb923c" stroke-width="1.2" marker-end="url(#g-orange)"/>
+        <text x="24" y="250" fill="#fb923c" font-size="6.5" transform="rotate(-90 24 250)" text-anchor="middle">handoff · 单向接力（点卡拉起接力页）</text>
+
+        <!-- ════════ 业务数据面：双源直连（左槽＝原子接口上下文 · 右槽＝接力页） ════════ -->
+        <path d="M 70 218 L 47 218 L 47 800 L 58 800" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#g-green)"/>
+        <text x="44" y="672" fill="#34d399" font-size="6">原子接口上下文 · wx.request 直连</text>
+        <path d="M 410 485 L 492 485 L 492 766" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#g-green)"/>
+        <text x="486" y="620" fill="#34d399" font-size="6.5" transform="rotate(-90 486 620)" text-anchor="middle">接力页 · wx.request 直连（不入网关）</text>
+
+        <!-- ════════ 第三方服务 · 开发者云 ════════ -->
+        <rect x="40" y="740" width="1480" height="115" rx="12" fill="rgba(148, 163, 184, 0.03)" stroke="#94a3b8" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="52" y="760" fill="#94a3b8" font-size="10" font-weight="600">第三方服务 · 开发者云</text>
+
+        <rect x="60" y="770" width="460" height="60" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="290" y="790" fill="white" font-size="10" font-weight="600" text-anchor="middle">业务服务</text>
+        <text x="290" y="808" fill="#94a3b8" font-size="7" text-anchor="middle">订单 / 支付 / 库存 · 业务数据面 · HTTPS</text>
+
+        <rect x="560" y="770" width="460" height="60" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="790" y="790" fill="white" font-size="10" font-weight="600" text-anchor="middle">SKILL 产物（静态资产）</text>
+        <text x="790" y="808" fill="#94a3b8" font-size="7" text-anchor="middle">SKILL.md · mcp.json · 接口实现 · 接力页</text>
+
+        <rect x="1050" y="770" width="450" height="60" rx="6" fill="transparent" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="1275" y="788" fill="#fb7185" font-size="9" font-weight="600" text-anchor="middle">隐私边界</text>
+        <text x="1275" y="804" fill="#94a3b8" font-size="6.5" text-anchor="middle">业务数据不经网关 / Agent（≤200KB 结构化摘要）</text>
+        <text x="1275" y="820" fill="#94a3b8" font-size="6.5" text-anchor="middle">原始对话留端侧 · 蒸馏记忆上云</text>
+
+        <line x1="790" y1="768" x2="790" y2="484" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#g-amber)"/>
+        <text x="800" y="700" fill="#fbbf24" font-size="6.5">提审入库</text>
+
+        <!-- ════════ 图例 ════════ -->
+        <text x="60" y="884" fill="white" font-size="9" font-weight="600">图例</text>
+        <line x1="60" y1="902" x2="96" y2="902" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="104" y="905" fill="#94a3b8" font-size="8">问答通道（客户端 ⇄ 网关 ⇄ Agent · NDJSON 单端点）</text>
+        <line x1="480" y1="902" x2="516" y2="902" stroke="#64748b" stroke-width="1.2"/>
+        <text x="524" y="905" fill="#94a3b8" font-size="8">内部流转：透传 / 派发</text>
+        <line x1="780" y1="902" x2="816" y2="902" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="824" y="905" fill="#94a3b8" font-size="8">工具通道（注册 · tools/call · handoff）</text>
+
+        <line x1="60" y1="922" x2="96" y2="922" stroke="#34d399" stroke-width="1.5"/>
+        <text x="104" y="925" fill="#94a3b8" font-size="8">业务数据面 wx.request（直连）</text>
+        <line x1="480" y1="922" x2="516" y2="922" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="5,3"/>
+        <text x="524" y="925" fill="#94a3b8" font-size="8">SKILL 提审入库</text>
+        <line x1="780" y1="922" x2="816" y2="922" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="824" y="925" fill="#94a3b8" font-size="8">storage 状态线</text>
+        <line x1="1050" y1="922" x2="1086" y2="922" stroke="#475569" stroke-width="1.2" stroke-dasharray="2,4"/>
+        <text x="1094" y="925" fill="#94a3b8" font-size="8">点线盒＝分组容器（非组件）</text>
+
+        <text x="60" y="952" fill="#64748b" font-size="7">客户端端到端只对接一套协议：对话、工具调用、流式进度复用同一 NDJSON 通道 · MCP 仅存在于网关工具面 ⇄ 能力提供方之间 · 客户端无第二套协议</text>
+      </svg>
+    </div>
+
+    <div class="cards">
+<div class="card">
+        <div class="card-header"><div class="card-dot cyan"></div><h3>三域职责</h3></div>
+        <ul>
+          <li>• 客户端：零决策执行宿主（A 链客户端运行时 ‖ B 链薄执行器 · 小程序运行时）</li>
+          <li>• 统一网关：接入协议面（协议转换·流式透传）+ 工具面（MCP 注册表·适配·归一）+ 能力提供方 · 无会话状态</li>
+          <li>• Agent：决策 + 会话与上下文 · 基础工具层与 _skills_index 常驻 · 外部能力经工具面</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot amber"></div><h3>一套协议</h3></div>
+        <ul>
+          <li>• 客户端 ⇄ 网关：NDJSON 单端点，三类流复用（query/回复 · tools/call·result · 流式进度）</li>
+          <li>• 网关 ⇄ Agent 双通道：问答通道（对话 · 回复流）‖ 工具通道（工具注册 · tools/call ⇄ 结果）</li>
+          <li>• 端侧工具执行（tools/call）借道同一会话通道，无独立调用协议</li>
+          <li>• MCP 调用是后端内部事务，客户端无感知</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot rose"></div><h3>能力接入（MCP）与边界</h3></div>
+        <ul>
+          <li>• 发现：_skills_index 常驻上下文 · 加载：read_skill 渐进披露</li>
+          <li>• 调用：胖技能派发子代理（云端脑）· 轻量工具 Agent 内置直连</li>
+          <li>• 业务数据 wx.request 直连（原子接口执行 ‖ 接力页闭环）· 不入网关（≤200KB 摘要）</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">
+      小微 AI 三域总体架构 · 生成于 2026-09
+    </p>
+  </div>
+
+  <script>
+    async function copyAsImage(btn) {
+      const orig = btn.textContent;
+      try {
+        const el = document.getElementById('report-container');
+        const r = el.getBoundingClientRect();
+        const pad = 32;
+        const canvas = await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && e.classList.contains('toolbar'), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        btn.textContent = '✓ Copied!';
+      } catch (e) { btn.textContent = '✗ Failed'; }
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+    async function downloadPNG(btn) {
+      const orig = btn.textContent;
+      btn.textContent = '⏳ ...';
+      try {
+        const el = document.getElementById('report-container');
+        const r = el.getBoundingClientRect();
+        const pad = 32;
+        const canvas = await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && e.classList.contains('toolbar'), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+        const link = document.createElement('a');
+        link.download = 'xiaowei-3domain-architecture.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.textContent = '✓ Done!';
+      } catch (e) { btn.textContent = '✗ Failed'; }
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+    async function downloadPDF(btn) {
+      const orig = btn.textContent;
+      btn.textContent = '⏳ ...';
+      try {
+        const el = document.getElementById('report-container');
+        const r = el.getBoundingClientRect();
+        const pad = 32;
+        const canvas = await html2canvas(document.body, { backgroundColor: '#020617', scale: 2, useCORS: true, ignoreElements: (e) => e.classList && e.classList.contains('toolbar'), x: r.left + window.scrollX - pad, y: r.top + window.scrollY - pad, width: r.width + pad * 2, height: r.height + pad * 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling'] });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save('xiaowei-3domain-architecture.pdf');
+        btn.textContent = '✓ Done!';
+      } catch (e) { btn.textContent = '✗ Failed'; }
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+  </script>
+</body>
+</html>
